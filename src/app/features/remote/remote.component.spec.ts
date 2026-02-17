@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RemoteComponent } from './remote.component';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 
 describe('RemoteComponent', () => {
   let component: RemoteComponent;
@@ -8,10 +10,20 @@ describe('RemoteComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RemoteComponent]
-    })
-    .compileComponents();
-    
+      imports: [RemoteComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              params: { id: '123' },
+            },
+            params: of({ id: '123' }),
+          },
+        },
+      ],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(RemoteComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -19,5 +31,9 @@ describe('RemoteComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should get the room ID from the route on initialization', () => {
+    expect(component.roomId).toBe('123');
   });
 });
