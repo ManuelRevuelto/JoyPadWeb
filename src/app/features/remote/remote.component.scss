@@ -1,0 +1,85 @@
+.gamepad {
+  display: flex;
+  max-width: 500px;
+  align-items: center;
+  justify-content: space-evenly;
+  margin: auto;
+  height: 40vw;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(3, 50px);
+  gap: 5px;
+
+  .btn {
+    width: 50px;
+    height: 50px;
+    background: #333;
+    transition: all 0.1s;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &.active {
+      background: #007bff !important;
+      transform: scale(0.9);
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  .up {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .right {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  .down {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+
+.actions {
+  .horn-btn {
+    width: 100px;
+    height: 100px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-weight: bold;
+    box-shadow: 0 4px #a92a35;
+    transition: all 0.1s;
+
+  }
+}
+
+/* Asegúrate de que no haya nada que pise esto */
+.actions .horn-btn.active {
+  background-color: #ffc107 !important;
+  transform: translateY(4px) scale(0.95) !important;
+  box-shadow: 0 0 #a92a35 !important;
+  transition: none !important; /* Para que el cambio sea instantáneo al pulsar */
+}
+// .btn,
+// .horn-btn {
+//   -ms-user-select: none;
+//   -webkit-user-select: none;
+//   -moz-user-select: none;
+//   -ms-user-select: none;
+//   user-select: none;
+//   -webkit-tap-highlight-color: transparent;
+//   -webkit-touch-callout: none;
+//   touch-action: none;
+// }

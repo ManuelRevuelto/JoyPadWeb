@@ -1,0 +1,43 @@
+.track {
+  width: 100vw;
+  height: 100vh;
+  background: #e5e5e5;
+  position: relative;
+  overflow: hidden;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.car {
+  position: absolute;
+  font-size: 50px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  will-change: left, top, transform;
+}
+
+.player-label {
+  position: absolute;
+  top: 10px;
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+}
+
+.debug-panel {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #00ff00;
+  padding: 10px;
+  font-family: monospace;
+  border-radius: 5px;
+  z-index: 100;
+  pointer-events: none;
+}

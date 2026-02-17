@@ -1,0 +1,27 @@
+<div class="track">
+  <h1>JoyPadWeb - Monitor</h1>
+  <p>
+    ID de Sala: <strong>{{ roomId }}</strong>
+  </p>
+
+  <div class="debug-panel">
+    <p>Sala: {{ roomId }}</p>
+    <p>Jugadores activos: {{ (players | keyvalue).length }}</p>
+    @for (item of players | keyvalue; track $index) {
+      <p>
+        ID: {{ item.key.substring(0, 5) }} - Vel:
+        {{
+          Math.sqrt(item.value.vX * item.value.vX + item.value.vY * item.value.vY)
+            | number: "1.1-1"
+        }}
+      </p>
+    }
+  </div>
+
+  @for (item of players | keyvalue; track $index) {
+    <div class="car" [style.left.%]="item.value.posX" [style.top.%]="item.value.posY">
+      <span [style.transform]="item.value.lastTransform" [style.color]="item.value.color" style="display: block">🚗</span>
+      <span class="player-label">{{ item.value.name }}</span>
+    </div>
+  }
+</div>

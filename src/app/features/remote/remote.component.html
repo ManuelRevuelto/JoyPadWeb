@@ -1,0 +1,55 @@
+<div class="gamepad">
+  <div class="dpad">
+    <button
+      type="button"
+      class="btn up"
+      (mousedown)="startMove('UP')"
+      (touchstart)="startMove('UP')"
+      [class.active]="activeButtons['UP']"
+    >
+      ▲
+    </button>
+
+    <button
+      type="button"
+      class="btn left"
+      (mousedown)="startMove('LEFT')"
+      (touchstart)="startMove('LEFT')"
+      [class.active]="activeButtons['LEFT']"
+    >
+      ◀
+    </button>
+
+    <button
+      type="button"
+      class="btn right"
+      (mousedown)="startMove('RIGHT')"
+      (touchstart)="startMove('RIGHT')"
+      [class.active]="activeButtons['RIGHT']"
+    >
+      ▶
+    </button>
+
+    <button
+      type="button"
+      class="btn down"
+      (mousedown)="startMove('DOWN')"
+      (touchstart)="startMove('DOWN')"
+      [class.active]="activeButtons['DOWN']"
+    >
+      ▼
+    </button>
+  </div>
+
+  <div class="actions">
+    <button
+      type="button"
+      class="horn-btn"
+      [class.active]="activeButtons['HORN']"
+      (mousedown)="startMove('HORN')"
+      (touchstart)="startMove('HORN')"
+    >
+      CLAXON
+    </button>
+  </div>
+</div>
