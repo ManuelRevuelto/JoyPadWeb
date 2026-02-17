@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0",
+    "dev": "npx concurrently \"ng serve\" \"npm run socket:dev\"",
+    "socket:dev": "tsx watch src/server/dev-socket.ts",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -23,6 +25,7 @@
     "@angular/ssr": "^17.2.2",
     "express": "^4.18.2",
     "rxjs": "~7.8.0",
+    "socket.io-client": "^4.8.3",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },
@@ -39,6 +42,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.3.2"
   }
 }
