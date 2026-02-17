@@ -10,11 +10,10 @@ import { SocketService } from '../../core/services/socket.service';
 import { isPlatformBrowser } from '@angular/common';
 
 @Component({
-  selector: 'app-remote',
-  standalone: true,
-  imports: [],
-  templateUrl: './remote.component.html',
-  styleUrl: './remote.component.scss',
+    selector: 'app-remote',
+    imports: [],
+    templateUrl: './remote.component.html',
+    styleUrl: './remote.component.scss'
 })
 export class RemoteComponent implements OnInit {
   roomId: string = '';
