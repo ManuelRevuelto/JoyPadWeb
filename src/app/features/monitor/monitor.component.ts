@@ -59,7 +59,8 @@ export class MonitorComponent implements OnInit {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      this.roomId = 'SALA-TEST';
+      // this.roomId = 'SALA-TEST';
+      this.roomId = 'SALA-' + Math.floor(Math.random() * 1000);
       this.socketService.joinRoom(this.roomId);
 
       this.socketService.listenToActionsWithId().subscribe((data) => {
