@@ -16,14 +16,22 @@ export class SocketService {
     action: string;
   }>();
 
-  private readonly URL = isPlatformBrowser(this.platformId)
-    ? `http://${window.location.hostname}:4000`
-    : 'http://localhost:4000';
+  private isBrowser = isPlatformBrowser(this.platformId);
+  private isLocal = this.isBrowser && window.location.hostname === 'localhost';
+
+  private readonly URL = this.isLocal
+    ? 'http://localhost:4000'
+    : this.isBrowser
+      ? window.location.origin
+      : '';
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       this.zone.runOutsideAngular(() => {
-        this.socket = io(this.URL);
+        this.socket = io(this.URL, {
+          transports: ['websocket'],
+          secure: !this.isLocal,
+        });
 
         this.socket.on('pc-receive', (data) => {
           console.log('📨 Socket recibió del servidor:', data);
