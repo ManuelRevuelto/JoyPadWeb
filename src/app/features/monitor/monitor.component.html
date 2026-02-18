@@ -1,11 +1,10 @@
 <div class="track">
   <h1>JoyPadWeb - Monitor</h1>
   <p>
-    ID de Sala: <strong>{{ roomId }}</strong>
+    ID de Sala: <strong id="room-id">{{ roomId }}</strong>
   </p>
 
   <div class="debug-panel">
-    <p>Sala: {{ roomId }}</p>
     <p>Jugadores activos: {{ (players | keyvalue).length }}</p>
     @for (item of players | keyvalue; track $index) {
       <p>
