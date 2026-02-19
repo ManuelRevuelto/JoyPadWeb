@@ -5,6 +5,8 @@
   justify-content: space-evenly;
   margin: auto;
   height: 40vw;
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
 }
 
 .dpad {
@@ -72,14 +74,15 @@
   box-shadow: 0 0 #a92a35 !important;
   transition: none !important; /* Para que el cambio sea instantáneo al pulsar */
 }
-// .btn,
-// .horn-btn {
-//   -ms-user-select: none;
-//   -webkit-user-select: none;
-//   -moz-user-select: none;
-//   -ms-user-select: none;
-//   user-select: none;
-//   -webkit-tap-highlight-color: transparent;
-//   -webkit-touch-callout: none;
-//   touch-action: none;
-// }
+
+.btn,
+.horn-btn {
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}

@@ -3,29 +3,15 @@ import { SocketService } from '../../core/services/socket.service';
 import {
   DecimalPipe,
   isPlatformBrowser,
-  JsonPipe,
   KeyValuePipe,
 } from '@angular/common';
-
-interface Player {
-  id: string;
-  posX: number;
-  posY: number;
-  vX: number;
-  vY: number;
-  activeKeys: { [key: string]: boolean };
-  facingRight: boolean;
-  lastTransform: string;
-  color: string;
-  name: string;
-}
+import { Player } from '../../shared/interfaces/player';
 
 @Component({
-  selector: 'app-monitor',
-  standalone: true,
-  imports: [DecimalPipe, KeyValuePipe],
-  templateUrl: './monitor.component.html',
-  styleUrl: './monitor.component.scss',
+    selector: 'app-monitor',
+    imports: [DecimalPipe, KeyValuePipe],
+    templateUrl: './monitor.component.html',
+    styleUrl: './monitor.component.scss',
 })
 export class MonitorComponent implements OnInit {
   players: { [id: string]: Player } = {};
