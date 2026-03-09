@@ -1,57 +1,74 @@
-<div class="gamepad">
+<button type="button" class="settings-trigger" (click)="toggleConfig()">
+  ⚙️
+</button>
+<button type="button" class="home-trigger" (click)="returnHome()">🏠</button>
+@if (isConfigOpen()) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <h2>Configuración</h2>
+
+      <div class="field">
+        <label>Nombre del Piloto</label>
+        <input
+          title="Nombre del piloto"
+          [value]="userConfig().name"
+          (input)="updateConfig('name', $any($event.target).value)"
+        />
+      </div>
+
+      <div class="field">
+        <label>Color del Coche</label>
+        <input
+          title="Color del coche"
+          type="color"
+          [value]="userConfig().carColor"
+          (input)="updateConfig('carColor', $any($event.target).value)"
+        />
+      </div>
+
+      <div class="field">
+        <label>Modelo</label>
+        <select
+          title="Modelo del coche"
+          [value]="userConfig().carModel"
+          (change)="updateConfig('carModel', $any($event.target).value)"
+        >
+          <option value="sedan">🚗 Sedán</option>
+          <option value="sport">🏎️ Deportivo</option>
+          <option value="truck">🚚 Camión</option>
+        </select>
+      </div>
+
+      <button class="save-btn" (click)="toggleConfig()">Cerrar y Jugar</button>
+    </div>
+  </div>
+}
+
+<div class="gamepad" [class.blur]="isConfigOpen()">
   <div class="dpad">
-    <button
-      type="button"
-      id="btn-up"
-      class="btn up"
-      (mousedown)="startMove('UP')"
-      (touchstart)="startMove('UP')"
-      [class.active]="activeButtons['UP']"
-    >
-      ▲
-    </button>
-
-    <button
-      type="button"
-      id="btn-left"
-      class="btn left"
-      (mousedown)="startMove('LEFT')"
-      (touchstart)="startMove('LEFT')"
-      [class.active]="activeButtons['LEFT']"
-    >
-      ◀
-    </button>
-
-    <button
-      type="button"
-      id="btn-right"
-      class="btn right"
-      (mousedown)="startMove('RIGHT')"
-      (touchstart)="startMove('RIGHT')"
-      [class.active]="activeButtons['RIGHT']"
-    >
-      ▶
-    </button>
-
-    <button
-      type="button"
-      id="btn-down"
-      class="btn down"
-      (mousedown)="startMove('DOWN')"
-      (touchstart)="startMove('DOWN')"
-      [class.active]="activeButtons['DOWN']"
-    >
-      ▼
-    </button>
+    @for (dir of ["UP", "LEFT", "RIGHT", "DOWN"]; track dir) {
+      <button
+        type="button"
+        [class]="'btn ' + dir.toLowerCase()"
+        [class.active]="activeButtons()[dir]"
+        (mousedown)="startMove(dir)"
+        (touchstart)="$event.preventDefault(); startMove(dir)"
+      >
+        @if (dir === "UP") { ▲ }
+        @else if (dir === "LEFT") { ◀ }
+        @else if (dir === "RIGHT") { ▶ }
+        @else if (dir === "DOWN") { ▼ }
+      </button>
+    }
   </div>
 
   <div class="actions">
     <button
       type="button"
       class="horn-btn"
-      [class.active]="activeButtons['HORN']"
+      [class.active]="activeButtons()['HORN']"
       (mousedown)="startMove('HORN')"
-      (touchstart)="startMove('HORN')"
+      (touchstart)="$event.preventDefault(); startMove('HORN')"
     >
       CLAXON
     </button>

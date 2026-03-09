@@ -1,122 +1,167 @@
 import {
+  afterNextRender,
   Component,
+  DestroyRef,
   HostListener,
   inject,
-  OnInit,
-  PLATFORM_ID,
+  signal,
 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SocketService } from '../../core/services/socket.service';
-import { isPlatformBrowser } from '@angular/common';
+import { UserConfig } from '../../shared/interfaces/userConfig';
 
 @Component({
-    selector: 'app-remote',
-    imports: [],
-    templateUrl: './remote.component.html',
-    styleUrl: './remote.component.scss'
+  selector: 'app-remote',
+  imports: [],
+  templateUrl: './remote.component.html',
+  styleUrl: './remote.component.scss',
 })
-export class RemoteComponent implements OnInit {
-  roomId: string = '';
-  playerName: string = '';
-  moveInterval: any;
+export class RemoteComponent {
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly socketService = inject(SocketService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  activeButtons: { [key: string]: boolean } = {
+  readonly isConfigOpen = signal(false);
+  readonly roomId = signal(this.route.snapshot.params['id']);
+
+  readonly userConfig = signal<UserConfig>({
+    name: 'Piloto',
+    carColor: '#ff0000',
+    carModel: 'sedan',
+  });
+
+  readonly activeButtons = signal<Record<string, boolean>>({
     UP: false,
     DOWN: false,
     LEFT: false,
     RIGHT: false,
     HORN: false,
-  };
+  });
 
-  private platformId = inject(PLATFORM_ID);
-  constructor(
-    private route: ActivatedRoute,
-    private socketService: SocketService,
-  ) {}
+  constructor() {
+    afterNextRender(() => {
+      this.loadSavedConfig();
+      this.connectToRoom();
+    });
+  }
 
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      this.roomId = this.route.snapshot.params['id'];
+  loadSavedConfig() {
+    const savedName = localStorage.getItem('playerName');
+    const savedColor = localStorage.getItem('carColor');
+    const savedModel = localStorage.getItem('carModel');
 
-      const savedName = localStorage.getItem('playerName');
-      const name = prompt('Introduce tu nombre de piloto:', savedName || '');
-      this.playerName = name || 'Piloto-' + Math.floor(Math.random() * 100);
-      localStorage.setItem('playerName', this.playerName);
-
-      this.socketService.joinRoom(this.roomId, this.playerName);
-      console.log('✅ Remote conectado a sala:', this.roomId);
+    if (savedName || savedColor || savedModel) {
+      this.userConfig.set({
+        name: savedName || 'Piloto',
+        carColor: savedColor || '#ff0000',
+        carModel: (savedModel as any) || 'sedan',
+      });
     }
   }
 
+  connectToRoom() {
+    const config = this.userConfig();
+    this.socketService.joinRoom(
+      this.roomId(),
+      { ...config, role: 'remote' }
+    );
+    console.log('✅ Remote conectado a sala:', this.roomId());
+
+    const sub = this.socketService.onSystemEvent().subscribe((event) => {
+      if (event === 'MONITOR_DISCONNECTED') {
+        console.warn('📺 Monitor has left. Disconecting...');
+        this.router.navigate(['/']);
+      }
+    });
+
+    this.destroyRef.onDestroy(() => {
+      sub.unsubscribe();
+      this.socketService.leaveRoom(this.roomId());
+    });
+  }
+
   startMove(action: string) {
-    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.activeButtons()[action]) return;
+
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    this.stopMove();
-    this.activeButtons[action] = true;
-
-    this.socketService.sendAction(this.roomId, action);
-    this.moveInterval = setInterval(() => {
-      this.socketService.sendAction(this.roomId, action);
-    }, 100);
+    this.activeButtons.update((btns) => ({ ...btns, [action]: true }));
+    this.socketService.sendAction(this.roomId(), action);
   }
 
-  stopMove() {
-    if (this.moveInterval) {
-      clearInterval(this.moveInterval);
-      this.moveInterval = null;
-    }
-
-    this.activeButtons = {
-      UP: false,
-      DOWN: false,
-      LEFT: false,
-      RIGHT: false,
-      HORN: false,
-    };
-    this.socketService.sendAction(this.roomId, 'STOP');
+  stopMove(action?: string) {
+    this.activeButtons.update((btns) => {
+      {
+        if (action) {
+          if (!btns[action]) return btns;
+          return { ...btns, [action]: false };
+        }
+        return {
+          UP: false,
+          DOWN: false,
+          LEFT: false,
+          RIGHT: false,
+          HORN: false,
+        };
+      }
+    });
+    this.socketService.sendAction(this.roomId(), 'STOP');
   }
 
-  honk() {
-    this.socketService.sendAction(this.roomId, 'HORN');
+  returnHome() {
+    this.router.navigate(['/']);
+  }
+
+  toggleConfig() {
+    this.isConfigOpen.update((v) => !v);
+  }
+
+  updateConfig(key: keyof UserConfig, value: string) {
+    this.userConfig.update((prev) => {
+      const nuevo = { ...prev, [key]: value };
+
+      localStorage.setItem('playerName', nuevo.name);
+      localStorage.setItem('carColor', nuevo.carColor);
+      localStorage.setItem('carModel', nuevo.carModel);
+
+      this.socketService.sendAction(this.roomId(), 'UPDATE_USER', nuevo);
+
+      return nuevo;
+    });
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    const key = event.key.toUpperCase();
-    if (key === 'ENTER') {
+    const action = this.mapKeyEvent(event.key);
+    if (action) {
       event.preventDefault();
-      this.startMove('HORN');
-      return;
-    }
-
-    let action = '';
-    if (key === 'ARROWUP') action = 'UP';
-    if (key === 'ARROWDOWN') action = 'DOWN';
-    if (key === 'ARROWLEFT') action = 'LEFT';
-    if (key === 'ARROWRIGHT') action = 'RIGHT';
-
-    if (action && !this.activeButtons[action]) {
       this.startMove(action);
+      return;
     }
   }
 
   @HostListener('window:keyup', ['$event'])
   handleKeyUp(event: KeyboardEvent) {
-    const key = event.key.toUpperCase();
-    if (
-      ['ARROWUP', 'ARROWDOWN', 'ARROWLEFT', 'ARROWRIGHT', 'ENTER'].includes(key)
-    ) {
-      this.stopMove();
-    }
+    const action = this.mapKeyEvent(event.key);
+    if (action) this.stopMove(action);
   }
 
   @HostListener('window:mouseup')
   @HostListener('window:touchend')
-  // @HostListener('window:blur')
   onGlobalRelease() {
     this.stopMove();
+  }
+
+  private mapKeyEvent(key: string): string | null {
+    const k = key.toUpperCase();
+    if (k === 'ARROWUP' || k === 'W') return 'UP';
+    if (k === 'ARROWDOWN' || k === 'S') return 'DOWN';
+    if (k === 'ARROWLEFT' || k === 'A') return 'LEFT';
+    if (k === 'ARROWRIGHT' || k === 'D') return 'RIGHT';
+    if (k === 'ENTER' || k === ' ') return 'HORN';
+    return null;
   }
 }

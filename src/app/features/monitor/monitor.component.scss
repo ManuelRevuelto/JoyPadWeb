@@ -41,3 +41,34 @@
   z-index: 100;
   pointer-events: none;
 }
+
+.car {
+  position: absolute;
+  transition: transform 0.1s ease-out;
+
+  .horn-wave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 0, 0.8);
+    border-radius: 50%;
+    animation: hornRipple 0.4s ease-out;
+  }
+}
+
+@keyframes hornRipple {
+  0% {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  100% {
+    width: 150px;
+    height: 150px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
