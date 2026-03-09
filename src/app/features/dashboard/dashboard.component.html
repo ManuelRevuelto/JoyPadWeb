@@ -1,0 +1,79 @@
+<div class="dashboard-container">
+  <h1>JOY-PAD <span class="v2">V2</span></h1>
+
+  <div class="cards-grid">
+    <div class="card monitor" (click)="router.navigate(['/monitor'])">
+      <div class="card-icon">🖥️</div>
+      <h3>Monitor</h3>
+      <p>Crea una sala nueva y visualiza el juego.</p>
+    </div>
+
+    <div class="card remote" (click)="showJoinModal.set(true)">
+      <div class="card-icon">🎮</div>
+      <h3>Mando</h3>
+      <p>Conéctate a una sala para controlar tu coche.</p>
+    </div>
+  </div>
+</div>
+@if (showJoinModal()) {
+  <div class="modal-overlay" (click)="showJoinModal.set(false)">
+    <div class="modal-window" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="icon-box">🎮</div>
+        <div class="title-group">
+          <h3>Unirse a Sala</h3>
+          <p>Introduce el código del monitor</p>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="input-container" [attr.data-status]="roomStatus()">
+          <input
+            type="text"
+            [value]="targetRoomId()"
+            (input)="onInput($event)"
+            placeholder="CÓDIGO"
+            maxlength="3"
+          />
+
+          <div class="status-indicator">
+            @if (roomStatus() === "checking") {
+              <div class="spinner"></div>
+            }
+            @if (roomStatus() === "ready") {
+              <span class="check">✔</span>
+            }
+            @if (roomStatus() === "empty") {
+              <span class="cross">✘</span>
+            }
+          </div>
+        </div>
+
+        <p class="status-text">
+          @if (roomStatus() === "checking") {
+            Buscando señal...
+          } @else if (roomStatus() === "ready") {
+            Conexión establecida
+          } @else if (roomStatus() === "empty") {
+            Sala no encontrada
+          } @else {
+            Inserte código de 3 dígitos
+          }
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="showJoinModal.set(false)">
+          CANCELAR
+        </button>
+        <button type="button"
+          class="btn-primary"
+          [disabled]="roomStatus() !== 'ready'"
+          (click)="joinRoom()"
+        >
+          CONECTAR
+        </button>
+      </div>
+    </div>
+  </div>
+}
