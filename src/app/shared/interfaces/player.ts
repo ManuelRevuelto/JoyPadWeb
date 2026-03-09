@@ -7,6 +7,8 @@ export interface Player {
   activeKeys: { [key: string]: boolean };
   facingRight: boolean;
   lastTransform: string;
-  color: string;
+  carColor: string;
   name: string;
+  carModel: string;
+  isHonking: boolean;
 }

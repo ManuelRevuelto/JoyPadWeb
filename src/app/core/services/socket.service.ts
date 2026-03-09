@@ -1,94 +1,128 @@
 import {
+  afterNextRender,
   inject,
   Injectable,
   NgZone,
-  OnDestroy,
   PLATFORM_ID,
 } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, Subject } from 'rxjs';
-import { isPlatformBrowser } from '@angular/common';
+import { UserConfig } from '../../shared/interfaces/userConfig';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SocketService implements OnDestroy {
-  private socket!: Socket;
-  private platformId = inject(PLATFORM_ID);
-  private zone = inject(NgZone);
-  private isBrowser = isPlatformBrowser(this.platformId);
+export class SocketService {
+  private socket?: Socket;
 
-  private actionWithIdSubject = new Subject<{
-    userId: string;
-    action: string;
-  }>();
-
-  private isLocal =
-    this.isBrowser &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname.startsWith('192.168.') ||
-      window.location.hostname.startsWith('10.') ||
-      window.location.hostname.endsWith('.local'));
-
-  private readonly URL = this.isLocal
-    ? `http://${window.location.hostname}:4000`
-    : this.isBrowser
-      ? window.location.origin
-      : '';
+  private readonly systemEventSubject = new Subject<string>();
+  private readonly gameActionSubject = new Subject<any>();
 
   constructor() {
-    if (this.isBrowser) {
-      this.zone.runOutsideAngular(() => {
-        this.socket = io(this.URL, {
-          transports: ['websocket', 'polling'],
-          secure: !this.isLocal,
-          reconnectionAttempts: 5,
-        });
+    afterNextRender(() => {
+      this.initSocket();
+    });
+  }
 
-        this.socket.on('pc-receive', (data) => {
-          console.log('📨 Socket recibió del servidor:', data);
-          this.zone.run(() => {
-            this.actionWithIdSubject.next(data);
-          });
-        });
+  initSocket() {
+    const isLocal =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname.startsWith('192.168.');
+    const URL = isLocal
+      ? `http://${window.location.hostname}:4000`
+      : window.location.origin;
 
-        this.socket.on('player-left', (id: string) => {
-          this.zone.run(() => {
-            this.actionWithIdSubject.next({ userId: id, action: 'DISCONNECT' });
-          });
-        });
+    this.socket = io(URL, {
+      transports: ['websocket'],
+      secure: !isLocal,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
 
-        this.socket.on('connect_error', (err) => {
-          console.error('❌ Error de conexión Socket:', err.message);
-        });
+    this.socket.on('pc-receive', (data) => {
+      this.gameActionSubject.next(data);
+    });
+
+    this.socket.on('player-joined', (data) => {
+      this.gameActionSubject.next({ ...data, action: 'JOIN' });
+    });
+
+    this.socket.on('user-updated', (data) => {
+      this.gameActionSubject.next({ ...data, action: 'UPDATE_USER' });
+    });
+
+    this.socket.on('player-left', (id: string) => {
+      this.gameActionSubject.next({ userId: id, action: 'DISCONNECT' });
+    });
+
+    this.socket.on('monitor-left', () => {
+      this.systemEventSubject.next('MONITOR_DISCONNECTED');
+    });
+
+    this.socket.on('connect_error', () => {
+      console.error('❌ Error de conexión al servidor de sockets');
+    });
+  }
+
+  checkRoom(roomId: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (!this.socket) return resolve(false);
+
+      this.socket.emit(
+        'check-room',
+        { roomId },
+        (response: { active: boolean }) => {
+          resolve(response.active);
+        },
+      );
+    });
+  }
+
+  joinRoom(
+    roomId: string,
+    config?: Partial<UserConfig> & { role?: 'remote' | 'monitor' },
+  ) {
+    if (!this.socket || this.socket.disconnected) {
+      this.initSocket();
+    }
+
+    const payload = {
+      roomId,
+      name: config?.name || `Monitor ${roomId}`,
+      carColor: config?.carColor || '',
+      carModel: config?.carModel || '',
+      role: config?.role || 'monitor',
+    };
+
+    if (this.socket?.connected) {
+      this.socket.emit('join-room', payload);
+    } else {
+      this.socket?.once('connect', () => {
+        this.socket?.emit('join-room', payload);
       });
     }
   }
 
-  joinRoom(roomId: string, name?: string) {
+  leaveRoom(roomId: string) {
     if (this.socket) {
-      this.socket.emit('join-room', { roomId, name });
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.socket) {
+      this.socket.emit('leave-room', { roomId });
       this.socket.disconnect();
+      console.log(`🚪 Abandonando sala: ${roomId}`);
     }
   }
 
-  sendAction(roomId: string, action: string) {
+  sendAction(roomId: string, action: string, data?: any) {
     if (this.socket) {
-      this.socket.emit('controller-input', { roomId, action });
+      this.socket.emit('controller-input', { roomId, action, data });
     }
   }
 
-  listenToActionsWithId(): Observable<{
-    userId: string;
-    action: string;
-    name?: string;
-  }> {
-    return this.actionWithIdSubject.asObservable();
+  listenToActions(): Observable<any> {
+    return this.gameActionSubject.asObservable();
+  }
+
+  onSystemEvent(): Observable<string> {
+    return this.systemEventSubject.asObservable();
   }
 
   getSocketId(): string {

@@ -1,26 +1,30 @@
 <div class="track">
   <h1>JoyPadWeb - Monitor</h1>
   <p>
-    ID de Sala: <strong id="room-id">{{ roomId }}</strong>
+    ID de Sala: <strong id="room-id">{{ roomId() }}</strong>
   </p>
 
   <div class="debug-panel">
-    <p>Jugadores activos: {{ (players | keyvalue).length }}</p>
-    @for (item of players | keyvalue; track $index) {
+    <p>Jugadores activos: {{ players().size }}</p>
+    @for (player of playerList(); track player.id) {
       <p>
-        ID: {{ item.key.substring(0, 5) }} - Vel:
+        ID: {{ player.id.substring(0, 5) }} - Vel:
         {{
-          Math.sqrt(item.value.vX * item.value.vX + item.value.vY * item.value.vY)
-            | number: "1.1-1"
+          Math.sqrt(
+            player.vX * player.vX + player.vY * player.vY
+          ) | number: "1.1-1"
         }}
       </p>
     }
   </div>
 
-  @for (item of players | keyvalue; track $index) {
-    <div class="car" [style.left.%]="item.value.posX" [style.top.%]="item.value.posY">
-      <span [style.transform]="item.value.lastTransform" [style.color]="item.value.color" style="display: block">🚗</span>
-      <span class="player-label">{{ item.value.name }}</span>
+  @for (player of playerList(); track player.id) {
+    <div class="car" [style.left.%]="player.posX" [style.top.%]="player.posY">
+      <span [style.transform]="player.lastTransform" [style.color]="player.carColor">{{ getCarIcon(player.carModel) }}</span>
+      <span class="player-label">{{ player.name }}</span>
+      @if (player.isHonking) {
+        <div class="horn-wave"></div>
+      }
     </div>
   }
 </div>
